@@ -11,10 +11,12 @@ html
     - for (var x = 0; x < plugs.length; x++)
       li
         span #{plugs[x].name} 
-        button.plug-on(data-index=x) On
-        button.plug-off(data-index=x) Off
+        button.plug-power(data-index=x data-power="on") On
+        button.plug-power(data-index=x data-power="off") Off
 
     script.
-      document.querySelectorAll('.plug-on').forEach(elem => {
-        elem.onclick = () => console.log('clicked')
-      });
+      function lightsPower(index, power) {
+        fetch('/plug/' + index + '/' + power);
+      }
+
+      document.querySelectorAll('.plug-power').forEach(elem => elem.onclick = () => lightsPower(elem.getAttribute('data-index'), elem.getAttribute('data-power')));
