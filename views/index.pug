@@ -1,0 +1,20 @@
+html
+  head
+    title Lights Control
+  body
+    h1 40 Planet Street
+    h3 Lights control
+
+    hr
+
+    h4 Plugs
+    - for (var x = 0; x < plugs.length; x++)
+      li
+        span #{plugs[x].name} 
+        button.plug-on(data-index=x) On
+        button.plug-off(data-index=x) Off
+
+    script.
+      document.querySelectorAll('.plug-on').forEach(elem => {
+        elem.onclick = () => console.log('clicked')
+      });
