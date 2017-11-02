@@ -2,21 +2,59 @@ html
   head
     title Lights Control
   body
-    h1 40 Planet Street
-    h3 Lights control
+    h1 Lights control
 
-    hr
-
-    h4 Plugs
-    - for (var x = 0; x < plugs.length; x++)
-      li
-        span #{plugs[x].name} 
-        button.plug-power(data-index=x data-power="on") On
-        button.plug-power(data-index=x data-power="off") Off
+    ul.lights
+      - for (var x = 0; x < plugs.length; x++)
+        li
+          span #{plugs[x].name} 
+          button.plug-power(data-index=x data-power="on") On
+          button.plug-power(data-index=x data-power="off") Off
 
     script.
-      function lightsPower(index, power) {
-        fetch('/plug/' + index + '/' + power);
+
+      function hueRequest(method, path, data, callback) {
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, 'http://#{hueAddress}/api/#{hueUsername}' + path);
+        xhr.onreadystatechange = () => {
+          if(xhr.readyState === 4 && xhr.status === 200 && callback) {
+            callback(JSON.parse(xhr.responseText));
+          }
+        };
+        xhr.send(data && JSON.stringify(data));
       }
 
-      document.querySelectorAll('.plug-power').forEach(elem => elem.onclick = () => lightsPower(elem.getAttribute('data-index'), elem.getAttribute('data-power')));
+      function huePower(code, power) {
+        hueRequest('PUT', '/lights/' + code + '/state', {on: power === 'on'}); 
+      }
+
+      function getHueBulbs() {
+        hueRequest('GET', '/lights', null, data => {
+          const lights = [];
+          for (const light in data){
+            data[light].code = light;
+            lights.push(data[light]);
+          }
+          drawBulbs(lights);
+        });
+      }
+
+      function drawBulbs(lights) {
+        let html = '';
+        lights.forEach(light => {
+          html += '<li>' + light.name + '<button class="hue-power" data-power="on" data-code="' + light.code + '">On</button><button class="hue-power" data-power="off" data-code="' + light.code + '">Off</button></li>';
+        });
+        document.querySelector('.lights').innerHTML += html;
+        bindListeners();
+      }
+
+      function plugPower(index, power) {
+        fetch('/plug/' + index + '/' + power, {method: 'PUT'});
+      }
+
+      function bindListeners(){
+        document.querySelectorAll('.hue-power').forEach(elem => elem.onclick = () => huePower(elem.getAttribute('data-code'), elem.getAttribute('data-power')));
+        document.querySelectorAll('.plug-power').forEach(elem => elem.onclick = () => plugPower(elem.getAttribute('data-index'), elem.getAttribute('data-power')));
+      }
+
+      getHueBulbs();

@@ -1,5 +1,6 @@
 const { Client } = require('tplink-smarthome-api');
-const express = require('express')
+const express = require('express');
+const config = require('./config.json');
 
 const app = express();
 app.set('views', './views');
@@ -8,10 +9,10 @@ app.set('view engine', 'pug');
 const plugs = [];
 
 app.get('/', function (req, res) {
-  res.render('index', { plugs });
+  res.render('index', { plugs, hueAddress: config.hueAddress, hueUsername: config.hueUsername });
 })
 
-app.get('/plug/:index/on', (req, res) => {
+app.put('/plug/:index/on', (req, res) => {
   const index = parseInt(req.params.index);
   if (plugs && plugs.length && plugs[index]) {
     plugs[index].setPowerState(true);
@@ -19,7 +20,7 @@ app.get('/plug/:index/on', (req, res) => {
   res.end()
 });
 
-app.get('/plug/:index/off', (req, res) => {
+app.put('/plug/:index/off', (req, res) => {
   const index = parseInt(req.params.index);
   if (plugs && plugs.length && plugs[index]) {
     plugs[index].setPowerState(false);
